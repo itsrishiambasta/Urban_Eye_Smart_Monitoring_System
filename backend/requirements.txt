@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+numpy
+pandas
+scikit-learn
+ultralytics
+opencv-python
+sqlalchemy

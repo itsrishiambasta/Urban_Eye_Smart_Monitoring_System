@@ -1,0 +1,28 @@
+# env
+.env
+
+# python
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# node
+node_modules/
+frontend/node_modules/
+
+# datasets
+Air Pollution Dataset/
+Crowd Detection Dataset/
+Traffic CCTV Video Dataset/
+Traffic Vehicle Detection Dataset/
+
+# models
+*.pt
+
+# logs
+*.log
+*_log.txt
+
+# vscode
+.vscode/

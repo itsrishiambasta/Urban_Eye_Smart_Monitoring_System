@@ -1,7 +1,11 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./urbaneye_v2.db"
+load_dotenv()
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./urbaneye_v2.db")
 # Since SQLite only supports one writer at a time, check_same_thread=False
 # is needed for FastAPI since it can use multiple threads per request
 engine = create_engine(

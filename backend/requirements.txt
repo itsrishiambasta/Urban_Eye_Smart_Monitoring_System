@@ -8,3 +8,4 @@ scikit-learn
 ultralytics
 opencv-python
 sqlalchemy
+python-dotenv

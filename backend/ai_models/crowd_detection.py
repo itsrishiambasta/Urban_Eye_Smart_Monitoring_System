@@ -1,9 +1,14 @@
 import cv2
 import time
+import os
 from ultralytics import YOLO
 
 class CrowdDetectionModel:
-    def __init__(self, model_path="yolov8n.pt"): # Use base model since yolov8n_crowd.pt might not exist
+    def __init__(self, model_path=None): # Use base model since yolov8n_crowd.pt might not exist
+        if model_path is None:
+            env_path = os.getenv("YOLO_MODEL_PATH", "").strip()
+            model_path = env_path if env_path else os.path.join(os.path.dirname(os.path.dirname(__file__)), "yolov8n.pt")
+            
         self.model_path = model_path
         try:
             self.model = YOLO(model_path)

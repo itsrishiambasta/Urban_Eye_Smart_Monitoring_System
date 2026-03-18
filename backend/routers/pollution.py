@@ -24,21 +24,29 @@ class PollutantsInput(BaseModel):
     Xylene: float = 0.0
 
 @router.get("/")
-def get_pollution_prediction(db: Session = Depends(get_db)):
+def get_pollution_prediction(location: str = "New Delhi, India", db: Session = Depends(get_db)):
     """
     Returns a default prediction (for backwards compatibility with existing dashboard).
     """
-    # Provide default middle-ground values if no input is provided
+    import time
+    import hashlib
+    
+    # Generate a deterministically chaotic variance based on 10s cycle-time and location
+    current_cycle = int(time.time() / 10)
+    hash_str = f"{location}-{current_cycle}"
+    variance_factor = (int(hashlib.md5(hash_str.encode()).hexdigest()[:4], 16) % 31) - 15  # Range -15 to +15
+    
+    # Provide default middle-ground values but apply the variance to PM2.5 and PM10 continuously
     default_features = {
-        'PM2.5': 45.0,
-        'PM10': 90.0,
+        'PM2.5': max(10.0, 45.0 + variance_factor),
+        'PM10': max(20.0, 90.0 + variance_factor * 1.5),
         'NO': 15.0,
         'NO2': 30.0,
         'NOx': 40.0,
         'NH3': 20.0,
         'CO': 1.0,
-        'SO2': 10.0,
-        'O3': 30.0,
+        'SO2': 10.0 + (variance_factor * 0.2), # Minor fluctuation in SO2
+        'O3': 30.0 + (variance_factor * 0.5), # Minor fluctuation in O3
         'Benzene': 2.0,
         'Toluene': 5.0,
         'Xylene': 1.0

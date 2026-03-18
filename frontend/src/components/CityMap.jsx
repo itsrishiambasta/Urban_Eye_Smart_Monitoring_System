@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Circle, Marker } from 'react-leaflet';
+import L from 'leaflet';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css';
@@ -52,6 +53,67 @@ function SearchField({ onLocationChange, setLat, setLng }) {
     return null;
 }
 
+// Custom Red Cross DivIcon for Emergency
+const createRedCrossIcon = () => {
+    return new L.DivIcon({
+        html: `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-red-600/20 border-2 border-red-500 shadow-[0_0_15px_rgba(239,68,68,1)] animate-ping">
+                 <span class="text-red-500 font-bold text-xl drop-shadow-md pb-0.5">✚</span>
+               </div>`,
+        className: '', // Removes default leaflet styling
+        iconSize: [32, 32],
+        iconAnchor: [16, 16] // Center the icon
+    });
+};
+
+function EmergencyHandler({ isEmergency, setLat, setLng, onLocationChange }) {
+    const map = useMap();
+    const [hasFired, setHasFired] = useState(false);
+
+    useEffect(() => {
+        if (isEmergency && !hasFired) {
+            setHasFired(true);
+
+            // 1. Voice Alert
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance("Emergency. Emergency. Immediate attention required.");
+                utterance.voice = window.speechSynthesis.getVoices().find(v => v.lang === 'en-US' && v.name.includes('Google')) || null;
+                utterance.rate = 1.0;
+                utterance.pitch = 1.1; // Slightly urgent pitch
+                utterance.volume = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // 2. Fetch PC Live Geolocation and Jump Map
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setLat(latitude);
+                        setLng(longitude);
+                        map.flyTo([latitude, longitude], 16, { animate: true, duration: 2 });
+
+                        // Optionally update HUD to show it's PC Location
+                        if (onLocationChange) {
+                            onLocationChange("Live Tracker");
+                        }
+                    },
+                    (error) => {
+                        console.error("Geolocation failed:", error);
+                        // Fallback: just speak, but don't jump map if permission denied
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+
+        } else if (!isEmergency && hasFired) {
+            // Reset the lock when emergency is over so it can trigger again later
+            setHasFired(false);
+        }
+    }, [isEmergency, hasFired, map, setLat, setLng, onLocationChange]);
+
+    return null;
+}
+
 export default function CityMap({ data, locationName, onLocationChange }) {
     const [lng, setLng] = useState(77.2090); // default new delhi
     const [lat, setLat] = useState(28.6139);
@@ -73,26 +135,50 @@ export default function CityMap({ data, locationName, onLocationChange }) {
                         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                     />
                     <SearchField onLocationChange={onLocationChange} setLat={setLat} setLng={setLng} />
+
+                    {/* Dynamic Data Overlay UI elements using React Leaflet Layers */}
+
+                    {/* Simulated heat map blob for traffic */}
+                    {data?.traffic?.density === 'High' && (
+                        <Circle
+                            center={[lat, lng]}
+                            pathOptions={{ fillColor: 'red', color: 'red', fillOpacity: 0.2, stroke: false }}
+                            radius={800} // 800 meters radius
+                            className="pulsate-circle-red"
+                        />
+                    )}
+
+                    {/* Simulated point for crowd */}
+                    {data?.crowd?.alert_triggered && (
+                        <Circle
+                            center={[lat, lng]}
+                            pathOptions={{ fillColor: '#eab308', color: '#eab308', fillOpacity: 0.3, stroke: false }}
+                            radius={400} // 400 meters radius
+                            className="pulsate-circle-yellow"
+                        />
+                    )}
+
+                    {/* Handle Emergency Actions (Voice, Map FlyTo, Location override) */}
+                    <EmergencyHandler
+                        isEmergency={data?.traffic?.counts?.emergency_vehicles > 0}
+                        setLat={setLat}
+                        setLng={setLng}
+                        onLocationChange={onLocationChange}
+                    />
+
+                    {/* Dynamic Emergency Vehicle Location Alert (Red Cross) */}
+                    {data?.traffic?.counts?.emergency_vehicles > 0 && (
+                        <Marker position={[lat, lng]} icon={createRedCrossIcon()} />
+                    )}
                 </MapContainer>
             </div>
 
-            {/* Dynamic Data Overlay UI elements simulating city zones */}
+            {/* Custom glowing epicenter marker (kept as static overlay to always show exact crosshair) */}
             <div className="absolute inset-0 z-10 pointer-events-none">
-
-                {/* Custom glowing epicenter marker */}
                 <div className="absolute top-1/2 left-1/2 -mt-4 -ml-4 flex items-center justify-center w-8 h-8 pointer-events-none">
                     <div className="absolute inset-0 bg-blue-500 rounded-full opacity-30 animate-ping"></div>
                     <div className="w-3 h-3 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,1)] border-2 border-white"></div>
                 </div>
-
-                {/* Simulated heat map blob for traffic */}
-                {data?.traffic?.density === 'High' && (
-                    <div className="absolute top-1/2 left-1/2 w-64 h-64 -mt-32 -ml-32 bg-red-500/10 rounded-full blur-[30px] animate-pulse"></div>
-                )}
-                {/* Simulated point for crowd */}
-                {data?.crowd?.alert_triggered && (
-                    <div className="absolute top-[40%] left-[60%] w-48 h-48 bg-yellow-500/10 rounded-full blur-[30px] animate-pulse"></div>
-                )}
 
                 {/* Teacher Demo Location Plate HUD */}
                 <div className="absolute bottom-6 left-6 flex flex-col space-y-2 pointer-events-auto">
@@ -117,7 +203,8 @@ export default function CityMap({ data, locationName, onLocationChange }) {
             </div>
 
             {/* Global Style overrides for Leaflet GeoSearch */}
-            <style dangerouslySetInnerHTML={{ __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
             .leaflet-control-geosearch {
                 position: absolute !important;
                 top: 10px !important;
@@ -143,6 +230,33 @@ export default function CityMap({ data, locationName, onLocationChange }) {
             .leaflet-control-geosearch input:focus {
                 outline: none !important;
             }
+            
+            /* Leaflet Circle Animations */
+            .pulsate-circle-red {
+                animation: pulse-red 2s infinite;
+            }
+            .pulsate-circle-yellow {
+                animation: pulse-yellow 2s infinite;
+            }
+            .pulsate-circle-blue {
+                animation: pulse-blue 1s infinite; /* Faster pulse for emergencies */
+            }
+            @keyframes pulse-red {
+                0% { opacity: 0.4; }
+                50% { opacity: 0.8; }
+                100% { opacity: 0.4; }
+            }
+            @keyframes pulse-yellow {
+                0% { opacity: 0.5; }
+                50% { opacity: 0.9; }
+                100% { opacity: 0.5; }
+            }
+            @keyframes pulse-blue {
+                0% { opacity: 0.6; transform: scale(0.9); }
+                50% { opacity: 1; transform: scale(1.1); }
+                100% { opacity: 0.6; transform: scale(0.9); }
+            }
+
             /* Hide the annoying search icon that leaflet uses by default since it looks bad, we use placeholder instead */
             .leaflet-control-geosearch a.reset {
                 color: #9CA3AF !important;

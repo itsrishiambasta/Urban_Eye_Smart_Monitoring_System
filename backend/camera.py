@@ -1,6 +1,10 @@
 import cv2
 import threading
 import time
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class SingletonCamera:
     _instance = None
@@ -23,13 +27,18 @@ class SingletonCamera:
         with self.read_lock:
             if self.running: return
             
+            # Load from env and determine if it's an integer index or a stream URL
+            camera_source = os.getenv("CAMERA_SOURCE", "0").strip()
+            if camera_source.isdigit():
+                camera_source = int(camera_source)
+                
             # Try default backend first without CAP_DSHOW as it causes black frames on some Windows drivers
-            self.cap = cv2.VideoCapture(0)
+            self.cap = cv2.VideoCapture(camera_source)
             
-            # If default fails, fallback to DSHOW
-            if not self.cap.isOpened():
+            # If default fails, fallback to DSHOW (only useful for integer indices on Windows)
+            if not self.cap.isOpened() and isinstance(camera_source, int):
                 print("Default backend failed, trying DSHOW...")
-                self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+                self.cap = cv2.VideoCapture(camera_source, cv2.CAP_DSHOW)
                 
             if not self.cap.isOpened():
                 print("Failed to start singleton camera")

@@ -14,12 +14,29 @@ export default function PollutionChart({ data }) {
 
   const { current_aqi, predicted_aqi_tomorrow, level } = data;
 
+  // Keep a scrolling window of the last 10 readings to make the chart look dynamic
+  // When a new location is searched, this will naturally adjust as new data streams in.
+  const [history, setHistory] = React.useState([]);
+
+  React.useEffect(() => {
+    setHistory(prev => {
+        const newHistory = [...prev, current_aqi];
+        if (newHistory.length > 7) {
+            newHistory.shift(); // keep only last 7 data points (simulating week)
+        }
+        return newHistory;
+    });
+  }, [current_aqi]);
+
+  // Generate labels dynamically based on how much history we have
+  const labels = history.map((_, i) => i === history.length - 1 ? 'Now' : `T-${history.length - 1 - i}`);
+
   const chartData = {
-    labels: ['Yesterday', 'Today', 'Tomorrow (Predicted)'],
+    labels: [...labels, 'Tomorrow (Predicted)'],
     datasets: [
       {
         label: 'Air Quality Index',
-        data: [current_aqi - 10, current_aqi, predicted_aqi_tomorrow], // mocking past data
+        data: [...history, predicted_aqi_tomorrow], 
         borderColor: 'rgb(99, 102, 241)',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         borderWidth: 3,

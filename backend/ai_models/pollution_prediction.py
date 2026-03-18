@@ -4,7 +4,10 @@ from datetime import datetime
 import os
 
 class AirPollutionModel:
-    def __init__(self, model_path="ai_models/pollution_model.pkl"):
+    def __init__(self, model_path=None):
+        if model_path is None:
+            model_path = os.path.join(os.path.dirname(__file__), "pollution_model.pkl")
+            
         self.model_path = model_path
         self.model = None
         

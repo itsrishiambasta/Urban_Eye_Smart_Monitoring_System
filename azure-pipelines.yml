@@ -1,0 +1,60 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  dockerBackendImage: 'yourrepo/urba-eye-backend:latest'
+  dockerFrontendImage: 'yourrepo/urba-eye-frontend:latest'
+  vmUser: 'azureuser'
+  vmIP: '$(VM_IP)'
+  deployPath: '/home/azureuser/app'
+
+stages:
+  - stage: Deploy
+    jobs:
+      - job: DeployToVM
+        steps:
+          - task: SSH@0
+            inputs:
+              sshEndpoint: 'UrbaEyeVM'
+              runOptions: 'inline'
+              inline: |
+                # Stop existing containers
+                docker compose -f $(deployPath)/docker-compose.yml down || true
+                
+                # Pull latest images from Docker Hub
+                docker pull $(dockerBackendImage)
+                docker pull $(dockerFrontendImage)
+                
+                # Create docker-compose file on VM
+                mkdir -p $(deployPath)
+                cat > $(deployPath)/docker-compose.yml <<EOF
+                version: '3.8'
+                services:
+                  backend:
+                    image: $(dockerBackendImage)
+                    ports:
+                      - "8000:8000"
+                    environment:
+                      - CORS_ORIGINS=*
+                    restart: always
+                
+                  frontend:
+                    image: $(dockerFrontendImage)
+                    ports:
+                      - "80:5173"
+                    environment:
+                      - VITE_API_URL=http://localhost:8000
+                    depends_on:
+                      - backend
+                    restart: always
+                EOF
+                
+                # Start containers
+                cd $(deployPath)
+                docker compose up -d
+                
+                # Check status
+                docker compose ps

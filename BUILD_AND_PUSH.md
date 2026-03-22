@@ -9,14 +9,14 @@
 
 ### 1. Build Backend Image
 ```bash
-docker build -f Dockerfile.backend -t yourrepo/urba-eye-backend:latest .
-docker push yourrepo/urba-eye-backend:latest
+docker build -f Dockerfile.backend -t pritam2004/final-project:01 .
+docker push pritam2004/final-project:01
 ```
 
 ### 2. Build Frontend Image
 ```bash
-docker build -f Dockerfile.frontend -t yourrepo/urba-eye-frontend:latest .
-docker push yourrepo/urba-eye-frontend:latest
+docker build -f Dockerfile.frontend -t pritam2004/final-project:01 .
+docker push pritam2004/final-project:01
 ```
 
 ### 3. Replace Image Names
@@ -25,13 +25,7 @@ In `azure-pipelines.yml`, update:
 - `yourrepo/urba-eye-frontend:latest` → your actual image name
 
 ## Quick Test Locally
-```bash
 docker compose up
 # Open http://localhost:5173 in browser
-```
 
-## To Push Specific Version
-```bash
-docker build -f Dockerfile.backend -t yourrepo/urba-eye-backend:v1.0 .
-docker push yourrepo/urba-eye-backend:v1.0
-```
+

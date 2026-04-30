@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../api';
 import { RefreshCw, Activity } from 'lucide-react';
-
-const API_BASE = '/api';
 
 // Default mean values based on typical dataset
 const initialFeatures = {
@@ -51,7 +49,7 @@ function AqiPredictor() {
   const calculateAqI = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE}/pollution-prediction/predict-aqi`, features);
+      const response = await apiClient.post(`/pollution-prediction/predict-aqi`, features);
       setPrediction(response.data);
     } catch (error) {
       console.error("Error fetching AI prediction:", error);
@@ -64,7 +62,7 @@ function AqiPredictor() {
     <div className="bg-gray-900 rounded-xl p-5 border border-indigo-900/50 shadow-[0_0_15px_rgba(79,70,229,0.15)] flex flex-col h-full relative overflow-hidden">
       {/* Decorative gradient overlay */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-      
+
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center space-x-2">
           <Activity className="w-5 h-5 text-indigo-400" />
@@ -72,7 +70,7 @@ function AqiPredictor() {
             Interactive ML Predictor
           </h2>
         </div>
-        <button 
+        <button
           onClick={calculateAqI}
           className="flex items-center space-x-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg transition-colors border border-indigo-400/30"
         >
@@ -94,10 +92,10 @@ function AqiPredictor() {
                 {features[slider.key].toFixed(slider.step ? 1 : 0)}
               </span>
             </div>
-            <input 
-              type="range" 
-              min="0" 
-              max={slider.max} 
+            <input
+              type="range"
+              min="0"
+              max={slider.max}
               step={slider.step || 1}
               value={features[slider.key]}
               onChange={(e) => handleSliderChange(e, slider.key)}
@@ -118,7 +116,7 @@ function AqiPredictor() {
             <p className="text-sm text-gray-500">Awaiting input...</p>
           )}
         </div>
-        
+
         <div className="text-right">
           <div className="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-1">AQI</div>
           {prediction ? (

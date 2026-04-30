@@ -1,27 +1,28 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "8000:8000"
-    environment:
-      - CORS_ORIGINS=http://localhost:5173,http://localhost
-    networks:
-      - urba-network
+  # backend:
+  #   image: pritam2004/final-project-backend:01
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - CORS_ORIGINS=http://localhost:5173,http://localhost
+  #   devices:
+  #     - "/dev/video0:/dev/video0"
+  #   privileged: true
+  #   group_add:
+  #     - video
+  #   networks:
+  #     - urba-network
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
+    image: pritam2004/final-project:04
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://backend:8000
-    depends_on:
-      - backend
+      - VITE_API_URL=https://shame-opening-jackie-space.trycloudflare.com/
+    # depends_on:
+    #   - backend
     networks:
       - urba-network
 

@@ -6,9 +6,14 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: env.VITE_API_URL || 'http://127.0.0.1:8000',
+          target: env.VITE_API_URL || 'https://bracket-proposition-balance-updated.trycloudflare.com',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
+          headers: {
+            'ngrok-skip-browser-warning': '69420',
+            'ngrok-skip-browser-warning-for-user': 'true',
+            'User-Agent': 'UrbanEye-Frontend'
+          }
         },
       },
       host: true

@@ -15,12 +15,12 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="UrbanEye API", description="Smart City Monitoring System Backend")
 
-origins = os.getenv("CORS_ORIGINS", "*").split(",")
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

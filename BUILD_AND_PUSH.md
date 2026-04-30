@@ -10,13 +10,14 @@
 ### 1. Build Backend Image
 ```bash
 docker build -f Dockerfile.backend -t pritam2004/final-project:01 .
-docker push pritam2004/final-project:01
-```
+docker push pritam2004/final-project-backend:01
+docker run -d --name new -p 5173:5173 --restart unless-stopped pritam2004/final-project:05
+ ```
 
 ### 2. Build Frontend Image
 ```bash
-docker build -f Dockerfile.frontend -t pritam2004/final-project:01 .
-docker push pritam2004/final-project:01
+docker build -f Dockerfile.frontend -t pritam2004/final-project:05 .
+docker push pritam2004/final-project:05
 ```
 
 ### 3. Replace Image Names
